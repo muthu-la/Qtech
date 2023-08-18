@@ -1,0 +1,121 @@
+from qiskit.opflow import PauliOp, SummedOp
+import numpy as np
+
+# Pauli matrices
+I = np.array([[1, 0], [0, 1]])
+X = np.array([[0, 1], [1, 0]])
+Y = np.array([[0, -1j], [1j, 0]])
+Z = np.array([[1, 0], [0, -1]])
+
+# Given Hamiltonian terms and coefficients
+hamiltonian_terms = [
+    (0.00698131079425246, 'IIIZ'),
+    (-0.0004978294000830275, 'IIZI'),
+    (4.664512584628966e-05, 'IZII'),
+    (0.0004303465157577957, 'ZIII'),
+    (0.5099539391488543, 'IIZZ'),
+    (0.5099677387273946, 'IZIZ'),
+    (0.5099488492845516, 'IZZI'),
+    (0.5099106232913859, 'ZIIZ'),
+    (0.5099467089998899, 'ZIZI'),
+    (0.5099046167492709, 'ZZII')
+]
+
+# Initialize the Hamiltonian matrix as a 4x4 identity matrix
+hamiltonian_matrix = np.kron(I, I).astype(complex)
+hamiltonian_matrix = np.kron(hamiltonian_matrix, I)
+hamiltonian_matrix = np.kron(hamiltonian_matrix, I)
+# Convert to complex data type
+
+# Iterate through the terms and update the Hamiltonian matrix
+for coeff, term in hamiltonian_terms:
+    term_matrix = [I] * 4  # Initialize with identity matrices for all qubits
+    for idx, qubit in enumerate(term):
+        if qubit == 'X':
+            term_matrix[idx] = X
+        elif qubit == 'Y':
+            term_matrix[idx] = Y
+        elif qubit == 'Z':
+            term_matrix[idx] = Z
+    
+    # Calculate the tensor product of Pauli matrices and update Hamiltonian matrix
+    term_matrix_product = np.kron(term_matrix[0], term_matrix[1])
+    term_matrix_product = np.kron(term_matrix_product, term_matrix[2])
+    term_matrix_product = np.kron(term_matrix_product, term_matrix[3])
+    hamiltonian_matrix += coeff * term_matrix_product
+
+# Print the resulting Hamiltonian matrix
+print("Hamiltonian Matrix:")
+print(hamiltonian_matrix)
+import numpy as np
+from qiskit import QuantumCircuit, Aer, transpile
+from qiskit.providers.aer import AerSimulator
+
+I = np.array([[1, 0], [0, 1]])
+X = np.array([[0, 1], [1, 0]])
+Y = np.array([[0, -1j], [1j, 0]])
+Z = np.array([[1, 0], [0, -1]])
+
+# Given Hamiltonian terms and coefficients
+hamiltonian_terms = [
+    (0.00698131079425246, 'IIIZ'),
+    (-0.0004978294000830275, 'IIZI'),
+    (4.664512584628966e-05, 'IZII'),
+    (0.0004303465157577957, 'ZIII'),
+    (0.5099539391488543, 'IIZZ'),
+    (0.5099677387273946, 'IZIZ'),
+    (0.5099488492845516, 'IZZI'),
+    (0.5099106232913859, 'ZIIZ'),
+    (0.5099467089998899, 'ZIZI'),
+    (0.5099046167492709, 'ZZII')
+]
+
+# Create a quantum circuit with 4 qubits
+qc = QuantumCircuit(4)
+
+# Apply gates based on the Hamiltonian terms
+for coeff, term in hamiltonian_terms:
+    term_matrix = [I] * 4 
+    for idx, qubit in enumerate(term):
+        if qubit == 'X':
+            term_matrix[idx] = X
+        elif qubit == 'Y':
+            term_matrix[idx] = Y
+        elif qubit == 'Z':
+            term_matrix[idx] = Z
+    term_matrix_product = np.kron(term_matrix[0], term_matrix[1])
+    term_matrix_product = np.kron(term_matrix_product, term_matrix[2])
+    term_matrix_product = np.kron(term_matrix_product, term_matrix[3])
+    term_circuit = QuantumCircuit(4)
+    for idx, pauli_matrix in enumerate(term_matrix):
+        if np.array_equal(pauli_matrix, X):
+            term_circuit.x(idx)  # Apply X gate
+        elif np.array_equal(pauli_matrix, Y):
+            term_circuit.y(idx)  # Apply Y gate
+        elif np.array_equal(pauli_matrix, Z):
+            term_circuit.z(idx)  # Apply Z gate
+    qc.compose(term_circuit, inplace=True)
+
+# Print the composed circuit
+print("Composed Quantum Circuit:")
+print(qc)
+
+
+
+          from qiskit import QuantumCircuit
+from qiskit.circuit.library import TwoLocal
+
+# Assuming you have 'num_assets' defined
+num_assets = 4
+
+# Create the ansatz circuit
+qc = QuantumCircuit(num_assets)
+ansatz = TwoLocal(num_assets, ['ry'], 'cz', reps=3, entanglement='full')
+qc.compose(ansatz, inplace=True)
+
+# Print the ansatz circuit
+print("Ansatz Circuit:")
+print(qc)
+
+# Now you can use the ansatz circuit for your problem
+ansatz.draw('mpl')
