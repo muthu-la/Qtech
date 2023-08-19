@@ -1,0 +1,68 @@
+import numpy as np
+
+
+I = np.array([[1, 0], [0, 1]])
+X = np.array([[0, 1], [1, 0]])
+Y = np.array([[0, -1j], [1j, 0]])
+Z = np.array([[1, 0], [0, -1]])
+
+
+hamiltonian_terms = [
+    (0.00698131079425246, 'IIIZ'),
+    (-0.0004978294000830275, 'IIZI'),
+    (4.664512584628966e-05, 'IZII'),
+    (0.0004303465157577957, 'ZIII'),
+    (0.5099539391488543, 'IIZZ'),
+    (0.5099677387273946, 'IZIZ'),
+    (0.5099488492845516, 'IZZI'),
+    (0.5099106232913859, 'ZIIZ'),
+    (0.5099467089998899, 'ZIZI'),
+    (0.5099046167492709, 'ZZII')
+]
+
+hamiltonian_matrix = np.kron(I, I).astype(complex)
+hamiltonian_matrix = np.kron(hamiltonian_matrix, I)
+hamiltonian_matrix = np.kron(hamiltonian_matrix, I)
+
+for coeff, term in hamiltonian_terms:
+    term_matrix = [I] * 4  
+    for idx, qubit in enumerate(term):
+        if qubit == 'X':
+            term_matrix[idx] = X
+        elif qubit == 'Y':
+            term_matrix[idx] = Y
+        elif qubit == 'Z':
+            term_matrix[idx] = Z
+    
+    
+    term_matrix_product = np.kron(term_matrix[0], term_matrix[1])
+    term_matrix_product = np.kron(term_matrix_product, term_matrix[2])
+    term_matrix_product = np.kron(term_matrix_product, term_matrix[3])
+    hamiltonian_matrix += coeff * term_matrix_product
+
+
+print("Hamiltonian Matrix:")
+print(hamiltonian_matrix)
+
+from qiskit import QuantumCircuit
+from qiskit.circuit.library import RYGate, CZGate
+
+def custom_ansatz(num_qubits, reps):
+    circuit = QuantumCircuit(num_qubits)
+    for _ in range(reps):
+        for qubit in range(num_qubits):
+            theta = 2 * np.pi * np.random.rand()  
+            circuit.append(RYGate(theta), [qubit])
+        for qubit1 in range(num_qubits - 1):
+            for qubit2 in range(qubit1 + 1, num_qubits):
+                circuit.append(CZGate(), [qubit1, qubit2])
+    return circuit
+
+import numpy as np
+
+num_assets = 4
+reps = 3
+
+ansatz_circuit = custom_ansatz(num_assets, reps)
+print(ansatz_circuit)
+ansatz_circuit.draw()
